@@ -62,15 +62,55 @@ export type Database = {
         }
         Relationships: []
       }
+      members: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          join_date: string
+          member_id: string
+          phone: string | null
+          status: Database["public"]["Enums"]["member_status"]
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          join_date?: string
+          member_id: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["member_status"]
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          join_date?: string
+          member_id?: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["member_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_member_id: { Args: never; Returns: string }
     }
     Enums: {
       book_status: "available" | "borrowed" | "damaged" | "lost"
+      member_status: "active" | "inactive" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -199,6 +239,7 @@ export const Constants = {
   public: {
     Enums: {
       book_status: ["available", "borrowed", "damaged", "lost"],
+      member_status: ["active", "inactive", "suspended"],
     },
   },
 } as const
