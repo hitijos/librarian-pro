@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { BookOpen, Users, BookMarked, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,10 +38,17 @@ export default function Dashboard() {
       const totalBooks = books?.reduce((sum, book) => sum + book.total_copies, 0) || 0;
       const availableBooks = books?.reduce((sum, book) => sum + book.available_copies, 0) || 0;
 
+      // Fetch members count
+      const { count: membersCount, error: membersError } = await supabase
+        .from("members")
+        .select("*", { count: "exact", head: true });
+
+      if (membersError) throw membersError;
+
       setStats({
         totalBooks,
         availableBooks,
-        totalMembers: 0, // Will be implemented in Phase 2
+        totalMembers: membersCount || 0,
         overdueItems: 0, // Will be implemented in Phase 4
       });
     } catch (error: any) {
@@ -75,7 +83,6 @@ export default function Dashboard() {
       icon: Users,
       color: "text-info",
       bgColor: "bg-info/10",
-      comingSoon: true,
     },
     {
       title: "Overdue Items",
@@ -130,24 +137,24 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors cursor-pointer">
+            <Link to="/books" className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors cursor-pointer">
               <h3 className="font-semibold text-foreground mb-1">Manage Books</h3>
               <p className="text-sm text-muted-foreground">
                 Add, edit, or remove books from your library collection
               </p>
-            </div>
+            </Link>
             <div className="p-4 border border-border rounded-lg bg-muted/30 cursor-not-allowed opacity-60">
               <h3 className="font-semibold text-foreground mb-1">Check Out Book</h3>
               <p className="text-sm text-muted-foreground">
                 Process book checkouts for members (Coming soon)
               </p>
             </div>
-            <div className="p-4 border border-border rounded-lg bg-muted/30 cursor-not-allowed opacity-60">
-              <h3 className="font-semibold text-foreground mb-1">Register Member</h3>
+            <Link to="/members" className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors cursor-pointer">
+              <h3 className="font-semibold text-foreground mb-1">Manage Members</h3>
               <p className="text-sm text-muted-foreground">
-                Add new members to the library system (Coming soon)
+                Add, edit, or manage library members
               </p>
-            </div>
+            </Link>
             <div className="p-4 border border-border rounded-lg bg-muted/30 cursor-not-allowed opacity-60">
               <h3 className="font-semibold text-foreground mb-1">View Overdue</h3>
               <p className="text-sm text-muted-foreground">

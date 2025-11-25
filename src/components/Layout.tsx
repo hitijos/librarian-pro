@@ -18,7 +18,7 @@ export default function Layout({ children }: LayoutProps) {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: BookOpen, label: "Books", path: "/books" },
-    { icon: Users, label: "Members", path: "/members", disabled: true },
+    { icon: Users, label: "Members", path: "/members" },
     { icon: BookMarked, label: "Borrowing", path: "/borrowing", disabled: true },
     { icon: AlertCircle, label: "Overdue", path: "/overdue", disabled: true },
   ];
