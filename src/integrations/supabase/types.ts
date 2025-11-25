@@ -101,16 +101,76 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          book_id: string
+          checkout_date: string
+          created_at: string
+          due_date: string
+          id: string
+          member_id: string
+          notes: string | null
+          return_date: string | null
+          status: Database["public"]["Enums"]["transaction_status"]
+          updated_at: string
+        }
+        Insert: {
+          book_id: string
+          checkout_date?: string
+          created_at?: string
+          due_date: string
+          id?: string
+          member_id: string
+          notes?: string | null
+          return_date?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string
+          checkout_date?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          member_id?: string
+          notes?: string | null
+          return_date?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      checkout_book: {
+        Args: { p_book_id: string; p_due_days?: number; p_member_id: string }
+        Returns: string
+      }
       generate_member_id: { Args: never; Returns: string }
+      return_book: { Args: { p_transaction_id: string }; Returns: undefined }
     }
     Enums: {
       book_status: "available" | "borrowed" | "damaged" | "lost"
       member_status: "active" | "inactive" | "suspended"
+      transaction_status: "borrowed" | "returned" | "overdue"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -240,6 +300,7 @@ export const Constants = {
     Enums: {
       book_status: ["available", "borrowed", "damaged", "lost"],
       member_status: ["active", "inactive", "suspended"],
+      transaction_status: ["borrowed", "returned", "overdue"],
     },
   },
 } as const
