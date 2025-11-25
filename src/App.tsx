@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Books from "./pages/Books";
+import Members from "./pages/Members";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,16 @@ const App = () => (
               <ProtectedRoute>
                 <Layout>
                   <Books />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/members"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Members />
                 </Layout>
               </ProtectedRoute>
             }
