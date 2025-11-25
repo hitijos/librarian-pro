@@ -9,6 +9,7 @@ interface Stats {
   totalBooks: number;
   availableBooks: number;
   totalMembers: number;
+  borrowedBooks: number;
   overdueItems: number;
 }
 
@@ -17,6 +18,7 @@ export default function Dashboard() {
     totalBooks: 0,
     availableBooks: 0,
     totalMembers: 0,
+    borrowedBooks: 0,
     overdueItems: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -45,11 +47,29 @@ export default function Dashboard() {
 
       if (membersError) throw membersError;
 
+      // Fetch borrowed books count
+      const { count: borrowedCount, error: borrowedError } = await supabase
+        .from("transactions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "borrowed");
+
+      if (borrowedError) throw borrowedError;
+
+      // Fetch overdue items count (due_date < now and status = borrowed)
+      const { count: overdueCount, error: overdueError } = await supabase
+        .from("transactions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "borrowed")
+        .lt("due_date", new Date().toISOString());
+
+      if (overdueError) throw overdueError;
+
       setStats({
         totalBooks,
         availableBooks,
         totalMembers: membersCount || 0,
-        overdueItems: 0, // Will be implemented in Phase 4
+        borrowedBooks: borrowedCount || 0,
+        overdueItems: overdueCount || 0,
       });
     } catch (error: any) {
       toast({
@@ -85,12 +105,18 @@ export default function Dashboard() {
       bgColor: "bg-info/10",
     },
     {
+      title: "Borrowed Books",
+      value: stats.borrowedBooks,
+      icon: BookOpen,
+      color: "text-warning",
+      bgColor: "bg-warning/10",
+    },
+    {
       title: "Overdue Items",
       value: stats.overdueItems,
       icon: AlertTriangle,
       color: "text-destructive",
       bgColor: "bg-destructive/10",
-      comingSoon: true,
     },
   ];
 
@@ -104,7 +130,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -121,9 +147,6 @@ export default function Dashboard() {
                 <div className="text-2xl font-bold text-foreground">
                   {loading ? "..." : stat.value}
                 </div>
-                {stat.comingSoon && (
-                  <p className="text-xs text-muted-foreground mt-1">Coming in next phase</p>
-                )}
               </CardContent>
             </Card>
           );
@@ -143,12 +166,12 @@ export default function Dashboard() {
                 Add, edit, or remove books from your library collection
               </p>
             </Link>
-            <div className="p-4 border border-border rounded-lg bg-muted/30 cursor-not-allowed opacity-60">
+            <Link to="/borrowing" className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors cursor-pointer">
               <h3 className="font-semibold text-foreground mb-1">Check Out Book</h3>
               <p className="text-sm text-muted-foreground">
-                Process book checkouts for members (Coming soon)
+                Process book checkouts and returns for members
               </p>
-            </div>
+            </Link>
             <Link to="/members" className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors cursor-pointer">
               <h3 className="font-semibold text-foreground mb-1">Manage Members</h3>
               <p className="text-sm text-muted-foreground">

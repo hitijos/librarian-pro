@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Books from "./pages/Books";
 import Members from "./pages/Members";
+import Borrowing from "./pages/Borrowing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,16 @@ const App = () => (
               <ProtectedRoute>
                 <Layout>
                   <Members />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/borrowing"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Borrowing />
                 </Layout>
               </ProtectedRoute>
             }
