@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Books from "./pages/Books";
 import Members from "./pages/Members";
+import MemberHistory from "./pages/MemberHistory";
 import Borrowing from "./pages/Borrowing";
 import NotFound from "./pages/NotFound";
 
@@ -48,6 +49,16 @@ const App = () => (
               <ProtectedRoute>
                 <Layout>
                   <Members />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/members/:memberId/history"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MemberHistory />
                 </Layout>
               </ProtectedRoute>
             }
