@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Edit, Trash2, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Mail, Phone, MapPin, Calendar, History } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +57,7 @@ const memberSchema = z.object({
 });
 
 export default function Members() {
+  const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -370,7 +372,16 @@ export default function Members() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => navigate(`/members/${member.id}/history`)}
+                            title="View borrowing history"
+                          >
+                            <History className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleEdit(member)}
+                            title="Edit member"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -378,6 +389,7 @@ export default function Members() {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDeleteClick(member)}
+                            title="Delete member"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
