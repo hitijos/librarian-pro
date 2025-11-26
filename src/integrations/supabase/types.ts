@@ -107,6 +107,8 @@ export type Database = {
           checkout_date: string
           created_at: string
           due_date: string
+          fine_amount: number | null
+          fine_paid: boolean | null
           id: string
           member_id: string
           notes: string | null
@@ -119,6 +121,8 @@ export type Database = {
           checkout_date?: string
           created_at?: string
           due_date: string
+          fine_amount?: number | null
+          fine_paid?: boolean | null
           id?: string
           member_id: string
           notes?: string | null
@@ -131,6 +135,8 @@ export type Database = {
           checkout_date?: string
           created_at?: string
           due_date?: string
+          fine_amount?: number | null
+          fine_paid?: boolean | null
           id?: string
           member_id?: string
           notes?: string | null
@@ -160,11 +166,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_fine: { Args: { p_transaction_id: string }; Returns: number }
       checkout_book: {
         Args: { p_book_id: string; p_due_days?: number; p_member_id: string }
         Returns: string
       }
       generate_member_id: { Args: never; Returns: string }
+      mark_fine_paid: { Args: { p_transaction_id: string }; Returns: undefined }
       return_book: { Args: { p_transaction_id: string }; Returns: undefined }
     }
     Enums: {
