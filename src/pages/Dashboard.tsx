@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Users, BookMarked, AlertTriangle } from "lucide-react";
+import { BookOpen, Users, BookMarked, AlertTriangle, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,8 @@ interface Stats {
   totalMembers: number;
   borrowedBooks: number;
   overdueItems: number;
+  totalFines: number;
+  unpaidFines: number;
 }
 
 export default function Dashboard() {
@@ -20,6 +22,8 @@ export default function Dashboard() {
     totalMembers: 0,
     borrowedBooks: 0,
     overdueItems: 0,
+    totalFines: 0,
+    unpaidFines: 0,
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -64,12 +68,26 @@ export default function Dashboard() {
 
       if (overdueError) throw overdueError;
 
+      // Fetch fine statistics
+      const { data: fineData, error: fineError } = await supabase
+        .from("transactions")
+        .select("fine_amount, fine_paid");
+
+      if (fineError) throw fineError;
+
+      const totalFines = fineData?.reduce((sum, t) => sum + (t.fine_amount || 0), 0) || 0;
+      const unpaidFines = fineData
+        ?.filter((t) => !t.fine_paid && t.fine_amount > 0)
+        .reduce((sum, t) => sum + t.fine_amount, 0) || 0;
+
       setStats({
         totalBooks,
         availableBooks,
         totalMembers: membersCount || 0,
         borrowedBooks: borrowedCount || 0,
         overdueItems: overdueCount || 0,
+        totalFines,
+        unpaidFines,
       });
     } catch (error: any) {
       toast({
@@ -89,6 +107,7 @@ export default function Dashboard() {
       icon: BookOpen,
       color: "text-primary",
       bgColor: "bg-primary/10",
+      isNumber: true,
     },
     {
       title: "Available Books",
@@ -96,6 +115,7 @@ export default function Dashboard() {
       icon: BookMarked,
       color: "text-success",
       bgColor: "bg-success/10",
+      isNumber: true,
     },
     {
       title: "Total Members",
@@ -103,6 +123,7 @@ export default function Dashboard() {
       icon: Users,
       color: "text-info",
       bgColor: "bg-info/10",
+      isNumber: true,
     },
     {
       title: "Borrowed Books",
@@ -110,6 +131,7 @@ export default function Dashboard() {
       icon: BookOpen,
       color: "text-warning",
       bgColor: "bg-warning/10",
+      isNumber: true,
     },
     {
       title: "Overdue Items",
@@ -117,6 +139,25 @@ export default function Dashboard() {
       icon: AlertTriangle,
       color: "text-destructive",
       bgColor: "bg-destructive/10",
+      isNumber: true,
+    },
+    {
+      title: "Total Fines",
+      value: stats.totalFines,
+      icon: DollarSign,
+      color: "text-warning",
+      bgColor: "bg-warning/10",
+      isNumber: false,
+      isCurrency: true,
+    },
+    {
+      title: "Unpaid Fines",
+      value: stats.unpaidFines,
+      icon: AlertTriangle,
+      color: "text-destructive",
+      bgColor: "bg-destructive/10",
+      isNumber: false,
+      isCurrency: true,
     },
   ];
 
@@ -130,7 +171,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -145,7 +186,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-foreground">
-                  {loading ? "..." : stat.value}
+                  {loading ? "..." : stat.isCurrency ? `₦${stat.value.toLocaleString()}` : stat.value}
                 </div>
               </CardContent>
             </Card>
@@ -178,12 +219,12 @@ export default function Dashboard() {
                 Add, edit, or manage library members
               </p>
             </Link>
-            <div className="p-4 border border-border rounded-lg bg-muted/30 cursor-not-allowed opacity-60">
-              <h3 className="font-semibold text-foreground mb-1">View Overdue</h3>
+            <Link to="/borrowing" className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors cursor-pointer">
+              <h3 className="font-semibold text-foreground mb-1">Manage Fines</h3>
               <p className="text-sm text-muted-foreground">
-                Check and manage overdue books (Coming soon)
+                View overdue items and manage late fee payments
               </p>
-            </div>
+            </Link>
           </div>
         </CardContent>
       </Card>

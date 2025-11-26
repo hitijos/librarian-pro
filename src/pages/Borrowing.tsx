@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, UserCheck, RotateCcw, Search, Calendar, AlertCircle } from "lucide-react";
+import { BookOpen, UserCheck, RotateCcw, Search, Calendar, AlertCircle, DollarSign, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +41,8 @@ interface Transaction {
   due_date: string;
   return_date: string | null;
   status: "borrowed" | "returned" | "overdue";
+  fine_amount: number;
+  fine_paid: boolean;
   members: {
     full_name: string;
     member_id: string;
@@ -225,6 +227,52 @@ export default function Borrowing() {
     }
   };
 
+  const handleMarkFinePaid = async (transactionId: string) => {
+    try {
+      const { error } = await supabase.rpc("mark_fine_paid", {
+        p_transaction_id: transactionId,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Fine marked as paid",
+      });
+
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to mark fine as paid",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const calculateFine = async (transactionId: string) => {
+    try {
+      const { error } = await supabase.rpc("calculate_fine", {
+        p_transaction_id: transactionId,
+      });
+
+      if (error) throw error;
+
+      fetchData();
+    } catch (error: any) {
+      console.error("Failed to calculate fine:", error);
+    }
+  };
+
+  // Calculate fines for overdue items
+  useEffect(() => {
+    transactions.forEach((transaction) => {
+      if (transaction.status === "overdue" && transaction.fine_amount === 0) {
+        calculateFine(transaction.id);
+      }
+    });
+  }, [transactions]);
+
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
       transaction.members.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -256,6 +304,10 @@ export default function Borrowing() {
   const borrowedCount = transactions.filter((t) => t.status === "borrowed").length;
   const overdueCount = transactions.filter((t) => t.status === "overdue").length;
   const returnedCount = transactions.filter((t) => t.status === "returned").length;
+  const totalFines = transactions.reduce((sum, t) => sum + (t.fine_amount || 0), 0);
+  const unpaidFines = transactions
+    .filter((t) => !t.fine_paid && t.fine_amount > 0)
+    .reduce((sum, t) => sum + t.fine_amount, 0);
 
   return (
     <div className="space-y-6">
@@ -276,7 +328,7 @@ export default function Borrowing() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -298,6 +350,30 @@ export default function Borrowing() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">{overdueCount}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Fines
+            </CardTitle>
+            <DollarSign className="w-4 h-4 text-warning" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">₦{totalFines.toLocaleString()}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Unpaid Fines
+            </CardTitle>
+            <AlertCircle className="w-4 h-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">₦{unpaidFines.toLocaleString()}</div>
           </CardContent>
         </Card>
 
@@ -362,16 +438,15 @@ export default function Borrowing() {
                         <TableHead>Due Date</TableHead>
                         {activeTab === "returned" && <TableHead>Return Date</TableHead>}
                         <TableHead>Status</TableHead>
-                        {activeTab !== "returned" && (
-                          <TableHead className="text-right">Actions</TableHead>
-                        )}
+                        <TableHead>Fine</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {loading ? (
                         <TableRow>
                           <TableCell
-                            colSpan={activeTab === "returned" ? 6 : 6}
+                            colSpan={activeTab === "returned" ? 8 : 8}
                             className="text-center py-8 text-muted-foreground"
                           >
                             Loading transactions...
@@ -380,7 +455,7 @@ export default function Borrowing() {
                       ) : filteredTransactions.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={activeTab === "returned" ? 6 : 6}
+                            colSpan={activeTab === "returned" ? 8 : 8}
                             className="text-center py-8 text-muted-foreground"
                           >
                             {searchQuery
@@ -439,18 +514,52 @@ export default function Borrowing() {
                                 {transaction.status}
                               </Badge>
                             </TableCell>
-                            {activeTab !== "returned" && (
-                              <TableCell className="text-right">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleReturn(transaction.id)}
-                                  className="gap-2"
-                                >
-                                  <RotateCcw className="w-3 h-3" />
-                                  Return
-                                </Button>
-                              </TableCell>
-                            )}
+                            <TableCell>
+                              {transaction.fine_amount > 0 ? (
+                                <div className="space-y-1">
+                                  <div className="font-medium text-foreground">
+                                    ₦{transaction.fine_amount.toLocaleString()}
+                                  </div>
+                                  {transaction.fine_paid ? (
+                                    <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                                      <Check className="w-3 h-3 mr-1" />
+                                      Paid
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
+                                      Unpaid
+                                    </Badge>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">No fine</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex gap-2 justify-end">
+                                {activeTab !== "returned" && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleReturn(transaction.id)}
+                                    className="gap-2"
+                                  >
+                                    <RotateCcw className="w-3 h-3" />
+                                    Return
+                                  </Button>
+                                )}
+                                {transaction.fine_amount > 0 && !transaction.fine_paid && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleMarkFinePaid(transaction.id)}
+                                    className="gap-2"
+                                  >
+                                    <Check className="w-3 h-3" />
+                                    Mark Paid
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
                           </TableRow>
                         ))
                       )}
