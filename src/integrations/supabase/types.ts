@@ -173,6 +173,14 @@ export type Database = {
       }
       generate_member_id: { Args: never; Returns: string }
       mark_fine_paid: { Args: { p_transaction_id: string }; Returns: undefined }
+      renew_book: {
+        Args: { p_extend_days?: number; p_transaction_id: string }
+        Returns: {
+          message: string
+          new_due_date: string
+          success: boolean
+        }[]
+      }
       return_book: { Args: { p_transaction_id: string }; Returns: undefined }
     }
     Enums: {
