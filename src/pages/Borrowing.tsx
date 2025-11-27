@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, UserCheck, RotateCcw, Search, Calendar, AlertCircle, DollarSign, Check } from "lucide-react";
+import { BookOpen, UserCheck, RotateCcw, Search, Calendar, AlertCircle, DollarSign, Check, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -245,6 +245,40 @@ export default function Borrowing() {
       toast({
         title: "Error",
         description: error.message || "Failed to mark fine as paid",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRenew = async (transactionId: string) => {
+    try {
+      const { data, error } = await supabase.rpc("renew_book", {
+        p_transaction_id: transactionId,
+        p_extend_days: 14,
+      });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        if (result.success) {
+          toast({
+            title: "Success",
+            description: `Book renewed successfully. New due date: ${format(new Date(result.new_due_date), "MMM d, yyyy")}`,
+          });
+          fetchData();
+        } else {
+          toast({
+            title: "Cannot Renew",
+            description: result.message,
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to renew book",
         variant: "destructive",
       });
     }
@@ -538,14 +572,25 @@ export default function Borrowing() {
                             <TableCell className="text-right">
                               <div className="flex gap-2 justify-end">
                                 {activeTab !== "returned" && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleReturn(transaction.id)}
-                                    className="gap-2"
-                                  >
-                                    <RotateCcw className="w-3 h-3" />
-                                    Return
-                                  </Button>
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleRenew(transaction.id)}
+                                      className="gap-2"
+                                    >
+                                      <RefreshCw className="w-3 h-3" />
+                                      Renew
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleReturn(transaction.id)}
+                                      className="gap-2"
+                                    >
+                                      <RotateCcw className="w-3 h-3" />
+                                      Return
+                                    </Button>
+                                  </>
                                 )}
                                 {transaction.fine_amount > 0 && !transaction.fine_paid && (
                                   <Button
