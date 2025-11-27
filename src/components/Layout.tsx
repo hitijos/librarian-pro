@@ -20,7 +20,6 @@ export default function Layout({ children }: LayoutProps) {
     { icon: BookOpen, label: "Books", path: "/books" },
     { icon: Users, label: "Members", path: "/members" },
     { icon: BookMarked, label: "Borrowing", path: "/borrowing" },
-    { icon: AlertCircle, label: "Overdue", path: "/overdue", disabled: true },
   ];
 
   const handleLogout = async () => {
@@ -72,18 +71,13 @@ export default function Layout({ children }: LayoutProps) {
               return (
                 <Link
                   key={item.path}
-                  to={item.disabled ? "#" : item.path}
+                  to={item.path}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground"
-                      : item.disabled
-                      ? "text-muted-foreground cursor-not-allowed opacity-50"
                       : "text-foreground hover:bg-secondary"
                   }`}
-                  onClick={(e) => {
-                    if (item.disabled) e.preventDefault();
-                    setIsSidebarOpen(false);
-                  }}
+                  onClick={() => setIsSidebarOpen(false)}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
