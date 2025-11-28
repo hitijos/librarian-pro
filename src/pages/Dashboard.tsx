@@ -171,56 +171,60 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title} className="relative overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card 
+              key={stat.title} 
+              className="relative overflow-hidden border-border/50 hover:border-border transition-all hover:shadow-lg group"
+            >
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                  <Icon className={`w-4 h-4 ${stat.color}`} />
+                <div className={`p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform`}>
+                  <Icon className={`w-5 h-5 ${stat.color}`} />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">
+              <CardContent className="pt-4">
+                <div className="text-3xl font-bold text-foreground">
                   {loading ? "..." : stat.isCurrency ? `₦${stat.value.toLocaleString()}` : stat.value}
                 </div>
               </CardContent>
+              <div className={`absolute bottom-0 left-0 right-0 h-1 ${stat.bgColor}`}></div>
             </Card>
           );
         })}
       </div>
 
       {/* Quick Actions */}
-      <Card>
+      <Card className="border-border/50">
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle className="text-xl">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <Link to="/books" className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors cursor-pointer">
-              <h3 className="font-semibold text-foreground mb-1">Manage Books</h3>
+            <Link to="/books" className="group p-6 border border-border rounded-xl hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer hover:shadow-md">
+              <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">Manage Books</h3>
               <p className="text-sm text-muted-foreground">
                 Add, edit, or remove books from your library collection
               </p>
             </Link>
-            <Link to="/borrowing" className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors cursor-pointer">
-              <h3 className="font-semibold text-foreground mb-1">Check Out Book</h3>
+            <Link to="/borrowing" className="group p-6 border border-border rounded-xl hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer hover:shadow-md">
+              <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">Check Out Book</h3>
               <p className="text-sm text-muted-foreground">
                 Process book checkouts and returns for members
               </p>
             </Link>
-            <Link to="/members" className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors cursor-pointer">
-              <h3 className="font-semibold text-foreground mb-1">Manage Members</h3>
+            <Link to="/members" className="group p-6 border border-border rounded-xl hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer hover:shadow-md">
+              <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">Manage Members</h3>
               <p className="text-sm text-muted-foreground">
                 Add, edit, or manage library members
               </p>
             </Link>
-            <Link to="/borrowing" className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors cursor-pointer">
-              <h3 className="font-semibold text-foreground mb-1">Manage Fines</h3>
+            <Link to="/borrowing" className="group p-6 border border-border rounded-xl hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer hover:shadow-md">
+              <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">Manage Fines</h3>
               <p className="text-sm text-muted-foreground">
                 View overdue items and manage late fee payments
               </p>
