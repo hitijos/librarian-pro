@@ -16,7 +16,7 @@ export default function Layout({ children }: LayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     { icon: BookOpen, label: "Books", path: "/books" },
     { icon: Users, label: "Members", path: "/members" },
     { icon: BookMarked, label: "Borrowing", path: "/borrowing" },
@@ -49,7 +49,7 @@ export default function Layout({ children }: LayoutProps) {
             <div className="flex items-center gap-2">
               <BookOpen className="w-8 h-8 text-primary" />
               <div>
-                <h1 className="text-xl font-bold text-foreground">Librarian Pro</h1>
+                <h1 className="text-xl font-bold text-foreground">Ikiwa City Hall Library</h1>
                 <p className="text-xs text-muted-foreground">Library Management</p>
               </div>
             </div>
@@ -113,7 +113,7 @@ export default function Layout({ children }: LayoutProps) {
           </Button>
           <div className="flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-primary" />
-            <span className="font-bold text-foreground">Librarian Pro</span>
+            <span className="font-bold text-foreground">Ikiwa City Hall Library</span>
           </div>
           <div className="w-10" />
         </header>
