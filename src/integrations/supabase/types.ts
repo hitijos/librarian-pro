@@ -62,6 +62,92 @@ export type Database = {
         }
         Relationships: []
       }
+      member_profiles: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      member_transactions: {
+        Row: {
+          book_id: string
+          checkout_date: string
+          created_at: string
+          due_date: string
+          fine_amount: number | null
+          fine_paid: boolean | null
+          id: string
+          notes: string | null
+          return_date: string | null
+          status: Database["public"]["Enums"]["transaction_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          checkout_date?: string
+          created_at?: string
+          due_date: string
+          fine_amount?: number | null
+          fine_paid?: boolean | null
+          id?: string
+          notes?: string | null
+          return_date?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          checkout_date?: string
+          created_at?: string
+          due_date?: string
+          fine_amount?: number | null
+          fine_paid?: boolean | null
+          id?: string
+          notes?: string | null
+          return_date?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_transactions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           address: string | null
@@ -161,18 +247,58 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       calculate_fine: { Args: { p_transaction_id: string }; Returns: number }
+      calculate_member_fine: {
+        Args: { p_transaction_id: string }
+        Returns: number
+      }
       checkout_book: {
         Args: { p_book_id: string; p_due_days?: number; p_member_id: string }
         Returns: string
       }
       generate_member_id: { Args: never; Returns: string }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       mark_fine_paid: { Args: { p_transaction_id: string }; Returns: undefined }
+      member_checkout_book: {
+        Args: { p_book_id: string; p_due_days?: number }
+        Returns: string
+      }
       renew_book: {
         Args: { p_extend_days?: number; p_transaction_id: string }
         Returns: {
@@ -184,6 +310,7 @@ export type Database = {
       return_book: { Args: { p_transaction_id: string }; Returns: undefined }
     }
     Enums: {
+      app_role: "admin" | "member"
       book_status: "available" | "borrowed" | "damaged" | "lost"
       member_status: "active" | "inactive" | "suspended"
       transaction_status: "borrowed" | "returned" | "overdue"
@@ -314,6 +441,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "member"],
       book_status: ["available", "borrowed", "damaged", "lost"],
       member_status: ["active", "inactive", "suspended"],
       transaction_status: ["borrowed", "returned", "overdue"],
