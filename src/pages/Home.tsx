@@ -41,9 +41,14 @@ export default function Home() {
               <p className="text-sm text-muted-foreground">Your Gateway to Knowledge</p>
             </div>
           </div>
-          <Button asChild>
-            <Link to="/auth">Staff Login</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/member-auth">Member Login</Link>
+            </Button>
+            <Button asChild>
+              <Link to="/auth">Staff Login</Link>
+            </Button>
+          </div>
         </div>
       </header>
 
