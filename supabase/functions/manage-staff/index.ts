@@ -127,34 +127,56 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Add staff role
-        const { error: roleInsertError } = await supabaseAdmin
+        // Update role to staff (trigger may have created 'member' role)
+        const { error: roleUpsertError } = await supabaseAdmin
           .from('user_roles')
-          .insert({ user_id: newUser.user.id, role: 'staff' });
+          .upsert(
+            { user_id: newUser.user.id, role: 'staff' },
+            { onConflict: 'user_id' }
+          );
 
-        if (roleInsertError) {
-          console.log('Error inserting role:', roleInsertError.message);
-          // Rollback - delete the created user
-          await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
-          throw roleInsertError;
+        if (roleUpsertError) {
+          console.log('Error upserting role:', roleUpsertError.message);
+          // Try update instead
+          const { error: roleUpdateError } = await supabaseAdmin
+            .from('user_roles')
+            .update({ role: 'staff' })
+            .eq('user_id', newUser.user.id);
+          
+          if (roleUpdateError) {
+            console.log('Error updating role:', roleUpdateError.message);
+            await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
+            throw roleUpdateError;
+          }
         }
 
-        // Create member profile
-        const { error: profileError } = await supabaseAdmin
+        // Update member profile (trigger may have already created it)
+        const { error: profileUpsertError } = await supabaseAdmin
           .from('member_profiles')
-          .insert({
-            user_id: newUser.user.id,
-            email,
-            full_name,
-            phone: phone || null
-          });
+          .upsert(
+            {
+              user_id: newUser.user.id,
+              email,
+              full_name,
+              phone: phone || null
+            },
+            { onConflict: 'user_id' }
+          );
 
-        if (profileError) {
-          console.log('Error creating profile:', profileError.message);
-          // Rollback
-          await supabaseAdmin.from('user_roles').delete().eq('user_id', newUser.user.id);
-          await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
-          throw profileError;
+        if (profileUpsertError) {
+          console.log('Error upserting profile:', profileUpsertError.message);
+          // Try update instead
+          const { error: profileUpdateError } = await supabaseAdmin
+            .from('member_profiles')
+            .update({ email, full_name, phone: phone || null })
+            .eq('user_id', newUser.user.id);
+          
+          if (profileUpdateError) {
+            console.log('Error updating profile:', profileUpdateError.message);
+            await supabaseAdmin.from('user_roles').delete().eq('user_id', newUser.user.id);
+            await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
+            throw profileUpdateError;
+          }
         }
 
         console.log('Staff created successfully:', newUser.user.id);
