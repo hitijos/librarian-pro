@@ -1,38 +1,54 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { BookOpen, LayoutDashboard, Users, BookMarked, AlertCircle, LogOut, Menu, X } from "lucide-react";
+import { BookOpen, LayoutDashboard, Users, BookMarked, LogOut, Menu, X, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
 interface LayoutProps {
   children: ReactNode;
 }
-export default function Layout({
-  children
-}: LayoutProps) {
+
+export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const navItems = [{
-    icon: LayoutDashboard,
-    label: "Dashboard",
-    path: "/dashboard"
-  }, {
-    icon: BookOpen,
-    label: "Books",
-    path: "/books"
-  }, {
-    icon: Users,
-    label: "Members",
-    path: "/members"
-  }, {
-    icon: BookMarked,
-    label: "Borrowing",
-    path: "/borrowing"
-  }];
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    checkAdminRole();
+  }, []);
+
+  const checkAdminRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+        
+        setIsAdmin(roleData?.role === 'admin');
+      }
+    } catch (error) {
+      console.error('Error checking admin role:', error);
+    }
+  };
+
+  const baseNavItems = [
+    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+    { icon: BookOpen, label: "Books", path: "/books" },
+    { icon: Users, label: "Members", path: "/members" },
+    { icon: BookMarked, label: "Borrowing", path: "/borrowing" },
+  ];
+
+  const adminNavItems = [
+    { icon: UserCog, label: "Staff", path: "/staff" },
+  ];
+
+  const navItems = isAdmin ? [...baseNavItems, ...adminNavItems] : baseNavItems;
   const handleLogout = async () => {
     const {
       error

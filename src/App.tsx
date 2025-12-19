@@ -15,6 +15,7 @@ import Books from "./pages/Books";
 import Members from "./pages/Members";
 import MemberHistory from "./pages/MemberHistory";
 import Borrowing from "./pages/Borrowing";
+import StaffManagement from "./pages/StaffManagement";
 import NotFound from "./pages/NotFound";
 import MemberDashboard from "./pages/member/MemberDashboard";
 import MemberBooks from "./pages/member/MemberBooks";
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/members" element={<ProtectedRoute><Layout><Members /></Layout></ProtectedRoute>} />
           <Route path="/members/:memberId/history" element={<ProtectedRoute><Layout><MemberHistory /></Layout></ProtectedRoute>} />
           <Route path="/borrowing" element={<ProtectedRoute><Layout><Borrowing /></Layout></ProtectedRoute>} />
+          <Route path="/staff" element={<ProtectedRoute><Layout><StaffManagement /></Layout></ProtectedRoute>} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>

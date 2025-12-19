@@ -310,7 +310,7 @@ export type Database = {
       return_book: { Args: { p_transaction_id: string }; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "member"
+      app_role: "admin" | "member" | "staff"
       book_status: "available" | "borrowed" | "damaged" | "lost"
       member_status: "active" | "inactive" | "suspended"
       transaction_status: "borrowed" | "returned" | "overdue"
@@ -441,7 +441,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "member"],
+      app_role: ["admin", "member", "staff"],
       book_status: ["available", "borrowed", "damaged", "lost"],
       member_status: ["active", "inactive", "suspended"],
       transaction_status: ["borrowed", "returned", "overdue"],
