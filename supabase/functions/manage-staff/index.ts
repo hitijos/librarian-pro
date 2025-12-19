@@ -64,11 +64,11 @@ Deno.serve(async (req) => {
 
     switch (action) {
       case 'list': {
-        // Get all staff users (users with 'staff' role)
+        // Get all staff and admin users (excluding current user to prevent self-deletion)
         const { data: staffRoles, error: listError } = await supabaseAdmin
           .from('user_roles')
-          .select('user_id')
-          .eq('role', 'staff');
+          .select('user_id, role')
+          .in('role', ['staff', 'admin']);
 
         if (listError) {
           console.log('Error listing staff roles:', listError.message);
@@ -83,6 +83,7 @@ Deno.serve(async (req) => {
         }
 
         const staffUserIds = staffRoles.map(r => r.user_id);
+        const roleMap = new Map(staffRoles.map(r => [r.user_id, r.role]));
         
         // Get profiles for staff users
         const { data: profiles, error: profilesError } = await supabaseAdmin
@@ -95,14 +96,20 @@ Deno.serve(async (req) => {
           throw profilesError;
         }
 
+        // Add role to each profile
+        const staffWithRoles = (profiles || []).map(profile => ({
+          ...profile,
+          role: roleMap.get(profile.user_id) || 'staff'
+        }));
+
         return new Response(
-          JSON.stringify({ staff: profiles || [] }),
+          JSON.stringify({ staff: staffWithRoles }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
       case 'create': {
-        const { email, password, full_name, phone } = data;
+        const { email, password, full_name, phone, role = 'staff' } = data;
         
         if (!email || !password || !full_name) {
           return new Response(
@@ -127,11 +134,12 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Update role to staff (trigger may have created 'member' role)
+        // Update role (trigger may have created 'member' role)
+        const targetRole = role === 'admin' ? 'admin' : 'staff';
         const { error: roleUpsertError } = await supabaseAdmin
           .from('user_roles')
           .upsert(
-            { user_id: newUser.user.id, role: 'staff' },
+            { user_id: newUser.user.id, role: targetRole },
             { onConflict: 'user_id' }
           );
 
@@ -140,7 +148,7 @@ Deno.serve(async (req) => {
           // Try update instead
           const { error: roleUpdateError } = await supabaseAdmin
             .from('user_roles')
-            .update({ role: 'staff' })
+            .update({ role: targetRole })
             .eq('user_id', newUser.user.id);
           
           if (roleUpdateError) {
@@ -187,7 +195,7 @@ Deno.serve(async (req) => {
       }
 
       case 'update': {
-        const { user_id, full_name, phone, email, password } = data;
+        const { user_id, full_name, phone, email, password, role } = data;
         
         if (!user_id) {
           return new Response(
@@ -205,6 +213,19 @@ Deno.serve(async (req) => {
         if (profileUpdateError) {
           console.log('Error updating profile:', profileUpdateError.message);
           throw profileUpdateError;
+        }
+
+        // Update role if provided
+        if (role && (role === 'staff' || role === 'admin')) {
+          const { error: roleUpdateError } = await supabaseAdmin
+            .from('user_roles')
+            .update({ role })
+            .eq('user_id', user_id);
+
+          if (roleUpdateError) {
+            console.log('Error updating role:', roleUpdateError.message);
+            throw roleUpdateError;
+          }
         }
 
         // Update auth user if email or password changed
