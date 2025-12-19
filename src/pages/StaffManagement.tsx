@@ -28,6 +28,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +47,7 @@ interface Staff {
   full_name: string;
   email: string;
   phone: string | null;
+  role: "staff" | "admin";
   created_at: string;
 }
 
@@ -47,6 +56,7 @@ const staffSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
   password: z.string().min(8, "Password must be at least 8 characters").optional(),
+  role: z.enum(["staff", "admin"]),
 });
 
 export default function StaffManagement() {
@@ -61,6 +71,7 @@ export default function StaffManagement() {
     email: "",
     phone: "",
     password: "",
+    role: "staff" as "staff" | "admin",
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -144,6 +155,7 @@ export default function StaffManagement() {
           full_name: formData.full_name,
           email: formData.email,
           phone: formData.phone || null,
+          role: formData.role,
         };
         
         if (formData.password) {
@@ -170,6 +182,7 @@ export default function StaffManagement() {
             password: formData.password,
             full_name: formData.full_name,
             phone: formData.phone || null,
+            role: formData.role,
           },
         });
 
@@ -235,6 +248,7 @@ export default function StaffManagement() {
       email: staffMember.email,
       phone: staffMember.phone || "",
       password: "",
+      role: staffMember.role || "staff",
     });
     setFormErrors({});
     setIsDialogOpen(true);
@@ -243,7 +257,7 @@ export default function StaffManagement() {
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setSelectedStaff(null);
-    setFormData({ full_name: "", email: "", phone: "", password: "" });
+    setFormData({ full_name: "", email: "", phone: "", password: "", role: "staff" });
     setFormErrors({});
   };
 
@@ -303,6 +317,7 @@ export default function StaffManagement() {
                     <TableHead>Full Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
+                    <TableHead>Role</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -315,6 +330,11 @@ export default function StaffManagement() {
                       </TableCell>
                       <TableCell>{staffMember.email}</TableCell>
                       <TableCell>{staffMember.phone || "-"}</TableCell>
+                      <TableCell>
+                        <Badge variant={staffMember.role === "admin" ? "default" : "secondary"}>
+                          {staffMember.role === "admin" ? "Admin" : "Staff"}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         {new Date(staffMember.created_at).toLocaleDateString()}
                       </TableCell>
@@ -414,6 +434,23 @@ export default function StaffManagement() {
               {formErrors.password && (
                 <p className="text-sm text-destructive">{formErrors.password}</p>
               )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role *</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value: "staff" | "admin") =>
+                  setFormData({ ...formData, role: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="staff">Staff</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
