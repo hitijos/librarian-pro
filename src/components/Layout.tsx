@@ -1,9 +1,13 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { BookOpen, LayoutDashboard, Users, BookMarked, LogOut, Menu, X, UserCog } from "lucide-react";
+import { BookOpen, LayoutDashboard, Users, BookMarked, LogOut, Menu, X, UserCog, Shield, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Database } from "@/integrations/supabase/types";
+
+type AppRole = Database["public"]["Enums"]["app_role"];
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,13 +18,15 @@ export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState<AppRole | null>(null);
+
+  const isAdmin = userRole === "admin";
 
   useEffect(() => {
-    checkAdminRole();
+    checkUserRole();
   }, []);
 
-  const checkAdminRole = async () => {
+  const checkUserRole = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -30,11 +36,31 @@ export default function Layout({ children }: LayoutProps) {
           .eq('user_id', user.id)
           .single();
         
-        setIsAdmin(roleData?.role === 'admin');
+        setUserRole(roleData?.role ?? null);
       }
     } catch (error) {
-      console.error('Error checking admin role:', error);
+      console.error('Error checking user role:', error);
     }
+  };
+
+  const getRoleBadge = () => {
+    if (!userRole) return null;
+    
+    const roleConfig = {
+      admin: { label: "Admin", icon: Shield, variant: "default" as const },
+      staff: { label: "Staff", icon: UserCheck, variant: "secondary" as const },
+      member: { label: "Member", icon: UserCheck, variant: "outline" as const },
+    };
+
+    const config = roleConfig[userRole];
+    const Icon = config.icon;
+
+    return (
+      <Badge variant={config.variant} className="flex items-center gap-1.5 px-2.5 py-1">
+        <Icon className="w-3.5 h-3.5" />
+        <span>{config.label}</span>
+      </Badge>
+    );
   };
 
   const baseNavItems = [
@@ -68,17 +94,20 @@ export default function Layout({ children }: LayoutProps) {
       <aside className={`${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transition-transform duration-300 lg:translate-x-0 lg:static`}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-border">
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-8 h-8 text-primary" />
-              <div>
-                <h1 className="text-xl font-bold text-foreground">Librarian Pro</h1>
-                <p className="text-xs text-muted-foreground">Library Management</p>
+          <div className="flex flex-col gap-3 p-6 border-b border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-8 h-8 text-primary" />
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">Librarian Pro</h1>
+                  <p className="text-xs text-muted-foreground">Library Management</p>
+                </div>
               </div>
+              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
+                <X className="w-5 h-5" />
+              </Button>
             </div>
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
-              <X className="w-5 h-5" />
-            </Button>
+            {getRoleBadge()}
           </div>
 
           {/* Navigation */}
