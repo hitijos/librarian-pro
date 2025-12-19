@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "@/components/Layout";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import RoleProtectedRoute from "@/components/RoleProtectedRoute";
 import MemberLayout from "@/components/MemberLayout";
 import MemberProtectedRoute from "@/components/MemberProtectedRoute";
 import Home from "./pages/Home";
@@ -45,13 +45,15 @@ const App = () => (
           <Route path="/member-portal/fines" element={<MemberProtectedRoute><MemberLayout><MemberFines /></MemberLayout></MemberProtectedRoute>} />
           <Route path="/member-portal/profile" element={<MemberProtectedRoute><MemberLayout><MemberProfile /></MemberLayout></MemberProtectedRoute>} />
           
-          {/* Admin/Staff Routes */}
-          <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-          <Route path="/books" element={<ProtectedRoute><Layout><Books /></Layout></ProtectedRoute>} />
-          <Route path="/members" element={<ProtectedRoute><Layout><Members /></Layout></ProtectedRoute>} />
-          <Route path="/members/:memberId/history" element={<ProtectedRoute><Layout><MemberHistory /></Layout></ProtectedRoute>} />
-          <Route path="/borrowing" element={<ProtectedRoute><Layout><Borrowing /></Layout></ProtectedRoute>} />
-          <Route path="/staff" element={<ProtectedRoute><Layout><StaffManagement /></Layout></ProtectedRoute>} />
+          {/* Admin/Staff Routes - accessible by admin and staff */}
+          <Route path="/dashboard" element={<RoleProtectedRoute allowedRoles={["admin", "staff"]}><Layout><Dashboard /></Layout></RoleProtectedRoute>} />
+          <Route path="/books" element={<RoleProtectedRoute allowedRoles={["admin", "staff"]}><Layout><Books /></Layout></RoleProtectedRoute>} />
+          <Route path="/members" element={<RoleProtectedRoute allowedRoles={["admin", "staff"]}><Layout><Members /></Layout></RoleProtectedRoute>} />
+          <Route path="/members/:memberId/history" element={<RoleProtectedRoute allowedRoles={["admin", "staff"]}><Layout><MemberHistory /></Layout></RoleProtectedRoute>} />
+          <Route path="/borrowing" element={<RoleProtectedRoute allowedRoles={["admin", "staff"]}><Layout><Borrowing /></Layout></RoleProtectedRoute>} />
+          
+          {/* Admin Only Routes */}
+          <Route path="/staff" element={<RoleProtectedRoute allowedRoles={["admin"]}><Layout><StaffManagement /></Layout></RoleProtectedRoute>} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
